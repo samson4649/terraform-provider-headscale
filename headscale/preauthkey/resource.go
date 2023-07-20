@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/awlsring/terraform-provider-headscale/internal/service"
 	"github.com/awlsring/terraform-provider-headscale/internal/utils"
@@ -248,6 +249,10 @@ func (r *preAuthKeyResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	err := r.client.ExpirePreAuthKey(ctx, state.User.ValueString(), state.Key.ValueString())
 	if err != nil {
+		e := err.Error()
+		if strings.Contains(e, "&{Code:2 Details:[] Message:AuthKey expired}") {
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error deleting pre auth key",
 			"Could not expire key, unexpected error: "+err.Error(),
